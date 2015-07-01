@@ -44,5 +44,11 @@ var floatV floatT = 123.45
 // No warning because the LHS names an interface type.
 var data interface{} = googleIPs
 
+// No warning because the LHS names an interface type.
+var data IType = googleIPs{}
+
+// No warning because the LHS names an interface type.
+var data IType = googleIPs
+
 // No warning because it's a common idiom for interface satisfaction.
 var _ Server = (*serverImpl)(nil)

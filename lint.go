@@ -736,6 +736,15 @@ func (f *file) lintVarDecls() {
 			if defType, ok := isUntypedConst(rhs); ok && !isIdent(v.Type, defType) {
 				return false
 			}
+
+			// Rough check of the interface type(LHS type != RHS type)
+			if rhsV, ok := rhs.(*ast.CompositeLit); ok && v.Type != rhsV.Type {
+				return false
+			}
+			if _, ok := rhs.(*ast.Ident); ok {
+				return false
+			}
+
 			f.errorf(v.Type, 0.8, category("type-inference"), "should omit type %s from declaration of var %s; it will be inferred from the right-hand side", f.render(v.Type), v.Names[0])
 			return false
 		}

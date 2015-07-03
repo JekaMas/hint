@@ -929,14 +929,18 @@ func (f *file) lintReceiverNames() {
 		}
 		name := names[0].Name
 		const ref = styleGuideBase + "#Receiver_Names"
-		if name == "_" {
-			f.errorf(n, 1, link(ref), category("naming"), `receiver name should not be an underscore`)
+		if name != "this" {
+			f.errorf(n, 1, link(ref), category("naming"), `receiver name should be 'this'`)
 			return true
 		}
-		if f.config.BadReceiverNames[name] {
-			f.errorf(n, 1, link(ref), category("naming"), `receiver name should be a reflection of its identity; don't use generic names such as "me", "this", or "self"`)
-			return true
-		}
+		// if name == "_" {
+		// 	f.errorf(n, 1, link(ref), category("naming"), `receiver name should not be an underscore`)
+		// 	return true
+		// }
+		// if f.config.BadReceiverNames[name] {
+		// 	f.errorf(n, 1, link(ref), category("naming"), `receiver name should be a reflection of its identity; don't use generic names such as "me", "this", or "self"`)
+		// 	return true
+		// }
 		recv := receiverType(fn)
 		if prev, ok := typeReceiver[recv]; ok && prev != name {
 			f.errorf(n, 1, link(ref), category("naming"), "receiver name %s should be consistent with previous receiver name %s for %s", name, prev, recv)

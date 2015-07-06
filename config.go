@@ -58,6 +58,7 @@ type Config struct {
 	PackageUnderscore  bool `json:"package-underscore"`
 	NamedReturn        bool `json:"named-return"`
 	PackagePrefixNames bool `json:"package-prefix-names"`
+	UseThis            bool `json:"use-this"`
 
 	MinConfidence float64 `json:"min-confidence"`
 
@@ -89,6 +90,7 @@ func NewDefaultConfig() *Config {
 		PackageUnderscore:  true,
 		NamedReturn:        false,
 		PackagePrefixNames: false,
+		UseThis:            false,
 
 		MinConfidence:    0.8,
 		Initialisms:      defaultCommonInitialisms,

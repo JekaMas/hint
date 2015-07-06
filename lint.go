@@ -111,7 +111,13 @@ func (f *file) lint() []Problem {
 	f.lintErrorf()
 	f.lintErrors()
 	f.lintErrorStrings()
-	f.lintReceiverNames()
+
+	if f.config.UseThis {
+		f.lintReceiverThis()
+	} else {
+		f.lintReceiverNames()
+	}
+
 	f.lintIncDec()
 	if f.config.MakeSlice {
 		f.lintMakeSlice()
@@ -910,6 +916,26 @@ func (f *file) lintErrorStrings() {
 			conf = 0.6
 		}
 		f.errorf(str, conf, link(styleGuideBase+"#Error_Strings"), category("errors"), msg)
+		return true
+	})
+}
+
+// lintReceiverThis examine reciever names. It argues on
+// not "this" names
+func (f *file) lintReceiverThis() {
+	f.walk(func(n ast.Node) bool {
+		fn, ok := n.(*ast.FuncDecl)
+		if !ok || fn.Recv == nil {
+			return true
+		}
+		names := fn.Recv.List[0].Names
+		if len(names) < 1 {
+			return true
+		}
+		name := names[0].Name
+		if name != "this" {
+			f.errorf(n, 1, category("naming"), `receiver name should be 'this'`)
+		}
 		return true
 	})
 }

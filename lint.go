@@ -82,6 +82,10 @@ func (f *file) lint() []Problem {
 	f.scanSortable()
 	f.main = f.isMain()
 
+	if f.config.CheckGenerated && f.lintIsGeneratedFile() {
+		return f.problems
+	}
+
 	if f.config.Package {
 		f.lintPackageComment()
 	}
@@ -1193,6 +1197,29 @@ func (f *file) lintNamedReturn() {
 	})
 }
 
+// lintCheckGeneratedFile check file for generated nature
+func (f *file) lintIsGeneratedFile() bool {
+	if f.f.Doc != nil {
+		for _, fileComment := range f.f.Doc.List {
+			if stringInSlice(fileComment.Text, f.config.GeneratedComments) {
+				return true
+			}
+		}
+	}
+
+	for _, commentsGroup := range f.f.Comments {
+		if commentsGroup != nil {
+			for _, fileComment := range commentsGroup.List {
+				if stringInSlice(fileComment.Text, f.config.GeneratedComments) {
+					return true
+				}
+			}
+		}
+	}
+
+	return false
+}
+
 func receiverType(fn *ast.FuncDecl) string {
 	switch e := fn.Recv.List[0].Type.(type) {
 	case *ast.Ident:
@@ -1314,4 +1341,19 @@ func srcLine(src []byte, p token.Position) string {
 		hi++
 	}
 	return string(src[lo:hi])
+}
+
+func stringInSlice(a string, list []string) bool {
+	for _, b := range list {
+		if caseInsensitiveContains(a, b) {
+			return true
+		}
+	}
+	return false
+}
+
+func caseInsensitiveContains(s, substr string) bool {
+	s, substr = strings.ToUpper(s), strings.ToUpper(substr)
+	s, substr = strings.TrimSpace(s), strings.TrimSpace(substr)
+	return strings.Contains(s, substr)
 }

@@ -12,7 +12,7 @@ func DonutRank(d Donut) int { // MATCH /donut\.DonutRank.*stutter/
 }
 
 // Donut is a delicious treat.
-type Donut interface{} // ok because it is the whole name
+type Donut interface{} // MATCH /interface name must have prefix 'I'/
 
 // Donuts are great, aren't they?
 type Donuts []Donut // ok because it didn't start a new word

@@ -47,7 +47,8 @@ func g() (no_way int)                   {} // MATCH /underscore.*func result.*no
 func (t *t_wow) f(more_under string)    {} // MATCH /underscore.*method parameter.*more_under/
 func (t *t_wow) g() (still_more string) {} // MATCH /underscore.*method result.*still_more/
 
-type i interface {
+// Checker checks
+type Checker interface { // MATCH /interface name must have prefix 'I'/
 	CheckHtml() string // okay; interface method names are often constrained by the concrete types' method names
 
 	F(foo_bar int) // MATCH /foo_bar.*fooBar/

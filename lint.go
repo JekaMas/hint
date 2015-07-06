@@ -123,6 +123,8 @@ func (f *file) lint() []Problem {
 		f.lintReceiverNames()
 	}
 
+	f.lintShadowedImports()
+
 	f.lintIncDec()
 	if f.config.MakeSlice {
 		f.lintMakeSlice()
@@ -282,6 +284,80 @@ func (f *file) lintImports() {
 			f.errorf(is, 1, link(styleGuideBase+"#Import_Dot"), category("imports"), "should not use dot imports")
 		}
 	}
+}
+
+func (f *file) lintShadowedImports() {
+	importNames := map[string]bool{}
+
+	f.walk(func(node ast.Node) bool {
+		switch v := node.(type) {
+		case *ast.ImportSpec:
+			if v.Name != nil {
+				if v.Name.Name == "." || v.Name.Name == "_" {
+					return true
+				}
+			}
+			splittedImport := strings.Split(v.Path.Value, "/")
+			importNames[strings.Trim(splittedImport[len(splittedImport)-1], "\"")] = true
+		}
+
+		return true
+	})
+
+	if len(importNames) == 0 {
+		return
+	}
+
+	checkShadowedImports := func(id *ast.Ident, importName map[string]bool) {
+		if importName[id.Name] {
+			f.errorf(id, 0.8, category("naming"), "variable name should not shadow package name")
+		}
+	}
+
+	f.walk(func(node ast.Node) bool {
+		switch v := node.(type) {
+		case *ast.AssignStmt:
+			if v.Tok == token.ASSIGN {
+				return true
+			}
+			for _, exp := range v.Lhs {
+				if id, ok := exp.(*ast.Ident); ok {
+					checkShadowedImports(id, importNames)
+				}
+			}
+
+		case *ast.FuncDecl:
+			checkShadowedImports(v.Name, importNames)
+
+		case *ast.GenDecl:
+			if v.Tok == token.IMPORT {
+				return true
+			}
+
+			for _, spec := range v.Specs {
+				switch s := spec.(type) {
+				case *ast.TypeSpec:
+					checkShadowedImports(s.Name, importNames)
+				case *ast.ValueSpec:
+					for _, id := range s.Names {
+						checkShadowedImports(id, importNames)
+					}
+				}
+			}
+
+		case *ast.RangeStmt:
+			if v.Tok == token.ASSIGN {
+				return true
+			}
+			if id, ok := v.Key.(*ast.Ident); ok {
+				checkShadowedImports(id, importNames)
+			}
+			if id, ok := v.Value.(*ast.Ident); ok {
+				checkShadowedImports(id, importNames)
+			}
+		}
+		return true
+	})
 }
 
 const docCommentsLink = styleGuideBase + "#Doc_Comments"

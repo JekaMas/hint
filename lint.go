@@ -96,6 +96,7 @@ func (f *file) lint() []Problem {
 	}
 	if f.config.Names {
 		f.lintNames()
+		f.lintInterfaceName()
 	}
 
 	if f.config.VarDecls {
@@ -687,6 +688,28 @@ var zeroLiteral = map[string]bool{
 	"0.":  true,
 	"0.0": true,
 	"0i":  true,
+}
+
+// lintInterfaceName checks if interface name has prefix "I"
+func (f *file) lintInterfaceName() {
+	f.walk(func(node ast.Node) bool {
+		switch v := node.(type) {
+		case *ast.TypeSpec:
+			if _, ok := v.Type.(*ast.InterfaceType); ok {
+				if !strings.HasPrefix(v.Name.Name, "I") {
+					f.errorf(v.Name, 0.9, category("naming"), "interface name must have prefix 'I'")
+				}
+			}
+		}
+		return true
+	})
+}
+
+func getName(expr ast.Expr) string {
+	if id, ok := expr.(*ast.Ident); ok {
+		return id.Name
+	}
+	return ""
 }
 
 // lintVarDecls examines variable declarations. It complains about declarations with
